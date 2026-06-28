@@ -1,0 +1,10 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">SupportMind logo</title>
+  <desc id="desc">A minimal S-shaped conversation mark with connected memory nodes.</desc>
+  <rect width="192" height="192" rx="44" fill="#111827"/>
+  <path d="M58 71C58 54.4315 71.4315 41 88 41H136C143.18 41 149 46.8203 149 54C149 61.1797 143.18 67 136 67H88C85.7909 67 84 68.7909 84 71C84 73.2091 85.7909 75 88 75H110C126.569 75 140 88.4315 140 105C140 121.569 126.569 135 110 135H63.5L44 153V105C44 88.4315 57.4315 75 74 75H88C71.4315 75 58 87.5685 58 71Z" fill="white"/>
+  <path d="M78 112H111C115.418 112 119 108.418 119 104C119 99.5817 115.418 96 111 96H87" stroke="#4F46E5" stroke-width="16" stroke-linecap="round"/>
+  <circle cx="72" cy="72" r="8" fill="#14B8A6"/>
+  <circle cx="134" cy="57" r="8" fill="#8B5CF6"/>
+  <circle cx="128" cy="126" r="8" fill="#F59E0B"/>
+</svg>

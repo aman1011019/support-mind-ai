@@ -1,0 +1,10 @@
+import os
+import sys
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT_DIR))
+
+os.environ.setdefault("VERCEL", "1")
+
+from backend.app import app  # noqa: E402

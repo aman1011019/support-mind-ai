@@ -1,0 +1,6 @@
+{
+  "name": "SupportMind",
+  "description": "An AI-powered customer support platform with persistent memory, live analytics, and highly contextual customer resolutions.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_AI_API"]
+}
