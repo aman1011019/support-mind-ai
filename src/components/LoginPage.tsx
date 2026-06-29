@@ -52,8 +52,10 @@ export default function LoginPage() {
     if (isAuthenticated) navigate('/dashboard');
   }, [isAuthenticated, navigate]);
 
-  // Load Google Identity Services script and initialize
+  // Load Google Identity Services script and initialize when a client ID is configured.
   useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return;
+
     const initGoogle = () => {
       if (!window.google || !googleBtnRef.current) return;
       window.google.accounts.id.initialize({
@@ -98,6 +100,10 @@ export default function LoginPage() {
     } finally {
       setIsGoogleLoading(false);
     }
+  };
+
+  const handleGoogleUnavailable = () => {
+    setLoginError('Google sign-in is visible, but it needs VITE_GOOGLE_CLIENT_ID and GOOGLE_CLIENT_ID configured before it can authenticate users.');
   };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
@@ -423,7 +429,23 @@ export default function LoginPage() {
                 </>
               ) : (
                 <button
+                  id="google-signin-unconfigured-btn"
+                  type="button"
+                  onClick={handleGoogleUnavailable}
+                  disabled={isGoogleLoading || isFormSubmitting}
+                  className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white dark:bg-[#0B0F19] border border-[#E8EAED] dark:border-[#1E293B] hover:border-[#6366F1]/40 hover:bg-[#F8F9FA] dark:hover:bg-slate-900 rounded-xl text-sm font-bold text-[#1A1A2E] dark:text-slate-200 transition-all cursor-pointer shadow-sm"
+                >
+                  <span className="w-5 h-5 rounded-full bg-white border border-[#E8EAED] text-[#4285F4] flex items-center justify-center text-xs font-black">
+                    G
+                  </span>
+                  Continue with Google
+                </button>
+              )}
+
+              {!GOOGLE_CLIENT_ID && (
+                <button
                   id="dev-login-btn"
+                  type="button"
                   onClick={handleDevLogin}
                   disabled={isGoogleLoading || isFormSubmitting}
                   className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white dark:bg-[#1E293B] border-2 border-dashed border-[#6366F1]/40 hover:border-[#6366F1] hover:bg-[#EEF2FF]/30 dark:hover:bg-indigo-950/20 rounded-xl text-sm font-bold text-[#6366F1] dark:text-indigo-400 transition-all cursor-pointer group"
@@ -444,7 +466,7 @@ export default function LoginPage() {
             <p className="text-[11px] text-center text-[#94A3B8] dark:text-slate-500 font-medium mt-5 leading-relaxed">
               {GOOGLE_CLIENT_ID
                 ? 'By signing in, you agree to our Terms of Service and Privacy Policy. Your data is encrypted end-to-end.'
-                : 'Demo mode is enabled locally. Configure VITE_GOOGLE_CLIENT_ID for real Google OAuth.'
+                : 'Configure VITE_GOOGLE_CLIENT_ID for live Google OAuth. Demo mode stays available locally.'
               }
             </p>
           </div>
