@@ -67,7 +67,7 @@ export default function LoginPage() {
       window.google.accounts.id.renderButton(googleBtnRef.current, {
         theme: isDark ? 'filled_black' : 'outline',
         size: 'large',
-        width: '100%',
+        width: 336,
         text: 'signin_with',
         shape: 'rectangular',
         logo_alignment: 'left',
