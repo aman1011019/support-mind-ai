@@ -2,7 +2,7 @@
  * SupportMind — Main Dashboard
  * Real API data: customers, analytics, AI resolution
  */
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
@@ -13,9 +13,10 @@ import SupportInput from './SupportInput';
 import ResponseCard from './ResponseCard';
 import MemoryManager from './MemoryManager';
 import CascadeFlowMap from './CascadeFlowMap';
+import { parseCustomerImportFile } from '../utils/customerImport';
 import {
   Brain, Check, Menu, X, Bot, Inbox, Info, Sun, Moon,
-  TrendingUp, Clock, Smile, AlertTriangle, Users, Zap
+  TrendingUp, Clock, Smile, AlertTriangle, Users, Zap, FileSpreadsheet, Loader2
 } from 'lucide-react';
 
 const PIPELINE_STEPS = [
@@ -30,6 +31,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { isDark, toggle: toggleTheme } = useDarkMode();
+  const uploadInputRef = useRef<HTMLInputElement>(null);
 
   const [activeTab, setActiveTab] = useState<'agent' | 'memory'>('agent');
   const [customers, setCustomers] = useState<CustomerData[]>([]);
@@ -38,6 +40,8 @@ export default function Dashboard() {
   const [loadingCustomers, setLoadingCustomers] = useState(true);
   const [loadingAnalytics, setLoadingAnalytics] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importStatus, setImportStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // AI resolution state
   const [isProcessing, setIsProcessing] = useState(false);
@@ -50,11 +54,15 @@ export default function Dashboard() {
     try {
       const data = await analyticsApi.getCustomers();
       setCustomers(data);
-      if (data.length > 0 && !selectedCustomer) {
-        setSelectedCustomer(data[0]);
-      }
+      setSelectedCustomer((current) => {
+        if (!data.length) return null;
+        if (!current) return data[0];
+        return data.find((customer) => customer.id === current.id) || data[0];
+      });
+      return data;
     } catch (err) {
       console.error('Failed to load customers:', err);
+      return [];
     } finally {
       setLoadingCustomers(false);
     }
@@ -87,6 +95,41 @@ export default function Dashboard() {
     setActiveResolution(null);
     setResolveError('');
     setIsSidebarOpen(false);
+  };
+
+  const handleImportFile = async (file?: File) => {
+    if (!file) return;
+
+    setIsImporting(true);
+    setImportStatus(null);
+
+    try {
+      const rows = await parseCustomerImportFile(file);
+      if (rows.length === 0) {
+        throw new Error('No usable customer complaint rows were found in that file.');
+      }
+
+      const result = await analyticsApi.importCustomers(rows);
+      await Promise.all([loadCustomers(), loadAnalytics()]);
+
+      if (result.customers.length > 0) {
+        setSelectedCustomer(result.customers[0]);
+        setActiveTab('memory');
+      }
+
+      setImportStatus({
+        type: 'success',
+        message: `${result.imported_count + result.updated_count} profiles, ${result.memory_count} complaints imported`,
+      });
+    } catch (err: any) {
+      setImportStatus({
+        type: 'error',
+        message: err.message || 'Could not import that spreadsheet.',
+      });
+    } finally {
+      setIsImporting(false);
+      if (uploadInputRef.current) uploadInputRef.current.value = '';
+    }
   };
 
   // ── AI Resolution — full pipeline with real API ──────────────────────────
@@ -274,6 +317,39 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-3">
+            <input
+              ref={uploadInputRef}
+              type="file"
+              accept=".xlsx,.csv"
+              className="hidden"
+              onChange={(event) => handleImportFile(event.target.files?.[0])}
+            />
+            {importStatus && (
+              <span
+                aria-live="polite"
+                className={`hidden xl:inline-flex max-w-[280px] truncate rounded-full border px-3 py-1.5 text-[10px] font-bold ${
+                  importStatus.type === 'success'
+                    ? 'border-emerald-100 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-300'
+                    : 'border-rose-100 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300'
+                }`}
+              >
+                {importStatus.message}
+              </span>
+            )}
+            <button
+              id="excel-upload-btn"
+              type="button"
+              onClick={() => uploadInputRef.current?.click()}
+              disabled={isImporting}
+              className="inline-flex h-9 items-center gap-2 rounded-xl border border-[#C7D2FE] bg-[#EEF2FF] px-3 text-xs font-bold text-[#4F46E5] shadow-sm shadow-[#6366F1]/5 transition-all hover:border-[#6366F1]/40 hover:bg-white disabled:cursor-not-allowed disabled:opacity-70 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-300 dark:hover:bg-[#111726]"
+            >
+              {isImporting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <FileSpreadsheet className="h-4 w-4" />
+              )}
+              <span className="hidden sm:inline">{isImporting ? 'Importing...' : 'Upload Excel'}</span>
+            </button>
             <span className="hidden md:flex items-center gap-1.5 bg-[#F1F3F5] dark:bg-slate-900/60 px-3 py-1.5 rounded-full border border-[#E8EAED] dark:border-slate-800 text-[10px] font-mono font-bold text-[#64748B] dark:text-slate-400">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               Live Node

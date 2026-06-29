@@ -136,6 +136,11 @@ export const analyticsApi = {
       method: 'POST',
       body: JSON.stringify(customer),
     }),
+  importCustomers: (rows: CustomerImportRow[]) =>
+    apiFetch<CustomerImportResponse>('/analytics/customers/import', {
+      method: 'POST',
+      body: JSON.stringify({ rows }),
+    }),
 };
 
 // ─── Support AI API ────────────────────────────────────────────────────────
@@ -216,6 +221,33 @@ export interface CustomerCreateRequest {
   plan: 'Starter' | 'Growth' | 'Enterprise';
   order_id?: string;
   avatar_url?: string;
+}
+
+export interface CustomerImportRow {
+  row_index?: number;
+  name?: string;
+  email?: string;
+  phone?: string;
+  plan?: string;
+  order_id?: string;
+  avatar_url?: string;
+  complaint?: string;
+  resolution?: string;
+  issue_category?: string;
+  priority?: string;
+  sentiment?: string;
+  repeat_issue_flag?: boolean;
+  interaction_date?: string;
+}
+
+export interface CustomerImportResponse {
+  imported_count: number;
+  updated_count: number;
+  skipped_count: number;
+  memory_count: number;
+  ticket_count: number;
+  customers: CustomerData[];
+  message: string;
 }
 
 export interface TicketData {

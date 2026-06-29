@@ -44,7 +44,7 @@ export default function LandingPage() {
       return;
     }
     const timer = setTimeout(() => {
-      if (demoStep < 4) {
+      if (demoStep < 5) {
         setDemoStep(prev => prev + 1);
       }
     }, 1200);

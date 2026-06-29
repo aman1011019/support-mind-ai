@@ -7,13 +7,80 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, date
+import re
 from ..database.database import get_db
-from ..models.models import Customer, SupportTicket, MemoryHistory, AIResponse, TicketStatus, PlanType
-from ..schemas.schemas import DashboardAnalytics, CustomerCreate, CustomerResponse
+from ..models.models import (
+    Customer,
+    SupportTicket,
+    MemoryHistory,
+    AIResponse,
+    TicketStatus,
+    PlanType,
+    PriorityLevel,
+    SentimentType,
+)
+from ..schemas.schemas import (
+    DashboardAnalytics,
+    CustomerCreate,
+    CustomerResponse,
+    CustomerImportRequest,
+    CustomerImportResponse,
+)
 from .auth import get_current_user
 from ..models.models import User
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
+
+
+def _clean_text(value: object, fallback: str = "") -> str:
+    return str(value or "").strip() or fallback
+
+
+def _normalize_plan(value: object) -> PlanType:
+    plan = _clean_text(value).lower()
+    if "enterprise" in plan or plan in {"ent", "vip", "premium"}:
+        return PlanType.enterprise
+    if "growth" in plan or plan in {"pro", "business", "team"}:
+        return PlanType.growth
+    return PlanType.starter
+
+
+def _normalize_priority(value: object) -> PriorityLevel:
+    priority = _clean_text(value, "medium").lower()
+    if priority in {"urgent", "critical", "p0", "blocker"}:
+        return PriorityLevel.urgent
+    if priority in {"high", "p1"}:
+        return PriorityLevel.high
+    if priority in {"low", "p3"}:
+        return PriorityLevel.low
+    return PriorityLevel.medium
+
+
+def _normalize_sentiment(value: object) -> SentimentType:
+    sentiment = _clean_text(value, "neutral").lower()
+    if sentiment in {item.value for item in SentimentType}:
+        return SentimentType(sentiment)
+    if sentiment in {"angry", "upset", "bad"}:
+        return SentimentType.frustrated
+    return SentimentType.neutral
+
+
+def _generated_email(name: str, row_index: int) -> str:
+    slug = re.sub(r"[^a-z0-9]+", ".", name.lower()).strip(".") or "customer"
+    return f"{slug}.{row_index}@supportmind.import"
+
+
+def _parse_interaction_date(value: object):
+    raw = _clean_text(value)
+    if not raw:
+        return None
+    normalized = raw.replace("Z", "+00:00")
+    for fmt in (None, "%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y", "%d-%m-%Y"):
+        try:
+            return datetime.fromisoformat(normalized) if fmt is None else datetime.strptime(raw, fmt)
+        except ValueError:
+            continue
+    return None
 
 
 @router.get("/dashboard", response_model=DashboardAnalytics)
@@ -141,3 +208,122 @@ def create_customer(
     db.commit()
     db.refresh(customer)
     return customer.to_dict()
+
+
+@router.post("/customers/import", response_model=CustomerImportResponse)
+def import_customers(
+    payload: CustomerImportRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Bulk import customer profiles and complaint history from spreadsheet rows."""
+    imported_count = 0
+    updated_count = 0
+    skipped_count = 0
+    memory_count = 0
+    ticket_count = 0
+    touched_ids: list[str] = []
+
+    try:
+        for index, row in enumerate(payload.rows, start=1):
+            row_index = row.row_index or index
+            name = _clean_text(row.name, f"Imported Customer {row_index}")[:100]
+            complaint = _clean_text(row.complaint)
+            resolution = _clean_text(row.resolution, "Imported complaint awaiting agent resolution.")
+            email = _clean_text(row.email).lower()
+
+            if not email or "@" not in email:
+                email = _generated_email(name, row_index)
+
+            if not complaint and not _clean_text(row.name) and not _clean_text(row.email):
+                skipped_count += 1
+                continue
+
+            customer = db.query(Customer).filter(Customer.email == email).first()
+            if customer:
+                updated_count += 1
+                customer.name = name or customer.name
+                customer.phone = _clean_text(row.phone) or customer.phone
+                customer.plan = _normalize_plan(row.plan)
+                customer.order_id = _clean_text(row.order_id) or customer.order_id
+                customer.avatar_url = _clean_text(row.avatar_url) or customer.avatar_url
+            else:
+                customer = Customer(
+                    name=name,
+                    email=email,
+                    phone=_clean_text(row.phone) or None,
+                    plan=_normalize_plan(row.plan),
+                    order_id=_clean_text(row.order_id) or None,
+                    avatar_url=_clean_text(row.avatar_url) or None,
+                )
+                db.add(customer)
+                db.flush()
+                imported_count += 1
+
+            if customer.id not in touched_ids:
+                touched_ids.append(customer.id)
+
+            if complaint:
+                priority = _normalize_priority(row.priority)
+                category = _clean_text(row.issue_category, "Imported Complaint")[:80]
+                interaction_date = _parse_interaction_date(row.interaction_date)
+
+                ticket = SupportTicket(
+                    customer_id=customer.id,
+                    issue_text=complaint,
+                    issue_category=category,
+                    priority=priority,
+                    status=TicketStatus.resolved if _clean_text(row.resolution) else TicketStatus.pending,
+                )
+                db.add(ticket)
+                ticket_count += 1
+
+                duplicate_memory = (
+                    db.query(MemoryHistory)
+                    .filter(
+                        MemoryHistory.customer_id == customer.id,
+                        MemoryHistory.previous_complaint == complaint,
+                    )
+                    .first()
+                )
+                if not duplicate_memory:
+                    memory = MemoryHistory(
+                        customer_id=customer.id,
+                        previous_complaint=complaint,
+                        previous_resolution=resolution,
+                        historical_context=f"Imported from spreadsheet row {row_index}.",
+                        issue_category=category,
+                        priority=priority,
+                        sentiment=_normalize_sentiment(row.sentiment),
+                        repeat_issue_flag=bool(row.repeat_issue_flag),
+                    )
+                    if interaction_date:
+                        memory.last_interaction_date = interaction_date
+                    db.add(memory)
+                    memory_count += 1
+
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+
+    customers = []
+    if touched_ids:
+        by_id = {
+            customer.id: customer
+            for customer in db.query(Customer).filter(Customer.id.in_(touched_ids)).all()
+        }
+        customers = [by_id[customer_id].to_dict() for customer_id in touched_ids if customer_id in by_id]
+
+    return CustomerImportResponse(
+        imported_count=imported_count,
+        updated_count=updated_count,
+        skipped_count=skipped_count,
+        memory_count=memory_count,
+        ticket_count=ticket_count,
+        customers=customers,
+        message=(
+            f"Imported {imported_count} new and updated {updated_count} existing customer profiles. "
+            f"Added {memory_count} Hindsight memory entries."
+        ),
+    )

@@ -67,6 +67,25 @@ class CustomerCreate(BaseModel):
     order_id: Optional[str] = None
     avatar_url: Optional[str] = None
 
+class CustomerImportRow(BaseModel):
+    row_index: Optional[int] = None
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    plan: Optional[str] = None
+    order_id: Optional[str] = None
+    avatar_url: Optional[str] = None
+    complaint: Optional[str] = None
+    resolution: Optional[str] = None
+    issue_category: Optional[str] = None
+    priority: Optional[str] = None
+    sentiment: Optional[str] = None
+    repeat_issue_flag: Optional[bool] = False
+    interaction_date: Optional[str] = None
+
+class CustomerImportRequest(BaseModel):
+    rows: List[CustomerImportRow] = Field(..., min_length=1, max_length=500)
+
 class MemoryHistoryResponse(BaseModel):
     id: str
     customer_id: str
@@ -89,6 +108,15 @@ class CustomerResponse(BaseModel):
     avatar_url: Optional[str] = None
     created_at: Optional[str] = None
     history: List[MemoryHistoryResponse] = []
+
+class CustomerImportResponse(BaseModel):
+    imported_count: int
+    updated_count: int
+    skipped_count: int
+    memory_count: int
+    ticket_count: int
+    customers: List[CustomerResponse] = []
+    message: str
 
 
 # ─── Ticket Schemas ────────────────────────────────────────────────────────────
