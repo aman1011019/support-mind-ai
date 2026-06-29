@@ -28,8 +28,9 @@ declare global {
   }
 }
 
-const rawGoogleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
-const GOOGLE_CLIENT_ID = rawGoogleClientId.includes('your_') ? '' : rawGoogleClientId;
+const DEFAULT_GOOGLE_CLIENT_ID = '845724740843-58r6kahi10fmd3ckir7lp9qpc85brivc.apps.googleusercontent.com';
+const rawGoogleClientId = (import.meta.env.VITE_GOOGLE_CLIENT_ID || DEFAULT_GOOGLE_CLIENT_ID).trim();
+const GOOGLE_CLIENT_ID = rawGoogleClientId.includes('your_') ? DEFAULT_GOOGLE_CLIENT_ID : rawGoogleClientId;
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -58,6 +59,11 @@ export default function LoginPage() {
 
     const initGoogle = () => {
       if (!window.google || !googleBtnRef.current) return;
+      const buttonWidth = Math.min(
+        400,
+        Math.max(240, Math.floor(googleBtnRef.current.getBoundingClientRect().width || 336))
+      );
+
       window.google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: handleGoogleCallback,
@@ -67,7 +73,7 @@ export default function LoginPage() {
       window.google.accounts.id.renderButton(googleBtnRef.current, {
         theme: isDark ? 'filled_black' : 'outline',
         size: 'large',
-        width: 336,
+        width: buttonWidth,
         text: 'signin_with',
         shape: 'rectangular',
         logo_alignment: 'left',
@@ -263,9 +269,6 @@ export default function LoginPage() {
 
         {/* Mobile logo */}
         <div className="absolute top-6 left-6 flex lg:hidden items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-          <div className="w-8 h-8 rounded-lg bg-[#6366F1] flex items-center justify-center">
-            <Brain className="w-4 h-4 text-white" />
-          </div>
           <ProductLogo markClassName="w-8 h-8" wordmarkClassName="text-lg" />
         </div>
 
@@ -277,9 +280,10 @@ export default function LoginPage() {
         >
           {/* Header */}
           <div className="text-center flex flex-col items-center gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] flex items-center justify-center shadow-lg shadow-[#6366F1]/25">
-              <Brain className="w-7 h-7 text-white" />
-            </div>
+            <ProductLogo
+              showWordmark={false}
+              markClassName="w-16 h-16 rounded-2xl shadow-lg shadow-[#6366F1]/20"
+            />
             <div>
               <h1 className="text-2xl font-extrabold text-[#1A1A2E] dark:text-slate-100 tracking-normal">
                 {isSignup ? 'Create your Account' : 'Sign in to SupportMind'}
@@ -419,12 +423,13 @@ export default function LoginPage() {
                       <span className="ml-2.5 text-sm font-medium text-[#64748B] dark:text-slate-400">Signing in...</span>
                     </div>
                   ) : (
-                    <div
-                      ref={googleBtnRef}
-                      id="google-signin-btn"
-                      className="w-full rounded-xl overflow-hidden"
-                      style={{ minHeight: '44px' }}
-                    />
+                    <div className="w-full min-h-[52px] rounded-xl border border-[#E8EAED] dark:border-[#1E293B] bg-white dark:bg-[#0B0F19] shadow-sm flex items-center justify-center overflow-hidden px-2">
+                      <div
+                        ref={googleBtnRef}
+                        id="google-signin-btn"
+                        className="w-full min-h-[44px] flex items-center justify-center"
+                      />
+                    </div>
                   )}
                 </>
               ) : (

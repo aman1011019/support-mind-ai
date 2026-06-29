@@ -7,6 +7,7 @@ if not os.getenv("VERCEL"):
     load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 PLACEHOLDER_PREFIXES = ("your_", "replace_", "change_")
+DEFAULT_GOOGLE_CLIENT_ID = "845724740843-58r6kahi10fmd3ckir7lp9qpc85brivc.apps.googleusercontent.com"
 
 
 def clean_env_value(value: str) -> str:
@@ -16,7 +17,7 @@ def clean_env_value(value: str) -> str:
 
 class Settings(BaseSettings):
     # Google OAuth
-    GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
+    GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", DEFAULT_GOOGLE_CLIENT_ID)
     GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET", "")
     
     # JWT
@@ -44,7 +45,7 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-settings.GOOGLE_CLIENT_ID = clean_env_value(settings.GOOGLE_CLIENT_ID)
+settings.GOOGLE_CLIENT_ID = clean_env_value(settings.GOOGLE_CLIENT_ID) or DEFAULT_GOOGLE_CLIENT_ID
 settings.GOOGLE_CLIENT_SECRET = clean_env_value(settings.GOOGLE_CLIENT_SECRET)
 settings.AI_PROVIDER_API_KEY = clean_env_value(settings.AI_PROVIDER_API_KEY)
 
