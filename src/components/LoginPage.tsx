@@ -28,9 +28,54 @@ declare global {
   }
 }
 
-const DEFAULT_GOOGLE_CLIENT_ID = '845724740843-58r6kahi10fmd3ckir7lp9qpc85brivc.apps.googleusercontent.com';
+const DEFAULT_GOOGLE_CLIENT_ID = 'your_google_client_id';
 const rawGoogleClientId = (import.meta.env.VITE_GOOGLE_CLIENT_ID || DEFAULT_GOOGLE_CLIENT_ID).trim();
 const GOOGLE_CLIENT_ID = rawGoogleClientId.includes('your_') ? DEFAULT_GOOGLE_CLIENT_ID : rawGoogleClientId;
+
+function IntakeSignal() {
+  return (
+    <span
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-x-5 top-2 h-1 overflow-hidden rounded-full bg-[#6366F1]/10 dark:bg-white/5"
+    >
+      <motion.span
+        className="absolute top-0 h-full w-16 rounded-full bg-gradient-to-r from-transparent via-[#14B8A6] to-transparent opacity-80"
+        animate={{ left: ['-30%', '112%'], opacity: [0, 1, 1, 0] }}
+        transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.span
+        className="absolute top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-[#F59E0B] shadow-sm shadow-[#F59E0B]/50"
+        animate={{ left: ['8%', '92%'], opacity: [0, 1, 1, 0] }}
+        transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut', delay: 0.25 }}
+      />
+    </span>
+  );
+}
+
+function GoogleLogoMark() {
+  return (
+    <span className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-[#E8EAED]">
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4.5 w-4.5">
+        <path
+          fill="#4285F4"
+          d="M21.8 12.2c0-.8-.1-1.5-.2-2.2H12v4.1h5.5c-.2 1.3-1 2.3-2.1 3v2.6h3.4c2-1.8 3-4.5 3-7.5z"
+        />
+        <path
+          fill="#34A853"
+          d="M12 22c2.8 0 5.1-.9 6.8-2.5l-3.4-2.6c-.9.6-2.1 1-3.4 1-2.6 0-4.9-1.8-5.7-4.2H2.8v2.7C4.5 19.7 8 22 12 22z"
+        />
+        <path
+          fill="#FBBC05"
+          d="M6.3 13.7c-.2-.6-.3-1.2-.3-1.9s.1-1.3.3-1.9V7.2H2.8C2.1 8.6 1.8 10.2 1.8 11.8s.4 3.2 1 4.6l3.5-2.7z"
+        />
+        <path
+          fill="#EA4335"
+          d="M12 5.8c1.5 0 2.9.5 4 1.6l3-3C17.1 2.7 14.8 1.8 12 1.8 8 1.8 4.5 4.1 2.8 7.2l3.5 2.7C7.1 7.6 9.4 5.8 12 5.8z"
+        />
+      </svg>
+    </span>
+  );
+}
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -71,11 +116,11 @@ export default function LoginPage() {
         cancel_on_tap_outside: true,
       });
       window.google.accounts.id.renderButton(googleBtnRef.current, {
-        theme: isDark ? 'filled_black' : 'outline',
+        theme: 'outline',
         size: 'large',
         width: buttonWidth,
         text: 'signin_with',
-        shape: 'rectangular',
+        shape: 'pill',
         logo_alignment: 'left',
       });
     };
@@ -298,29 +343,45 @@ export default function LoginPage() {
           <div className="bg-white dark:bg-[#111726] rounded-2xl border border-[#E8EAED] dark:border-[#1E293B] p-8 shadow-lg dark:shadow-none">
             
             {/* Tabs for switching between Sign In and Sign Up */}
-            <div className="flex border-b border-[#E8EAED] dark:border-[#1E293B] mb-6">
-              <button
+            <div className="relative flex gap-1 rounded-2xl border border-[#E8EAED] dark:border-[#1E293B] bg-[#F8F9FA] dark:bg-[#0B0F19] p-1 mb-6">
+              <motion.button
                 type="button"
                 onClick={() => { setIsSignup(false); setLoginError(''); }}
-                className={`flex-1 pb-3 text-sm font-bold border-b-2 transition-all cursor-pointer ${
+                whileTap={{ scale: 0.98 }}
+                className={`relative min-h-[44px] flex-1 rounded-xl text-sm font-bold transition-colors cursor-pointer overflow-hidden ${
                   !isSignup
-                    ? 'border-[#6366F1] text-[#6366F1] dark:text-indigo-400'
-                    : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400'
+                    ? 'text-[#6366F1] dark:text-indigo-300'
+                    : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400'
                 }`}
               >
-                Sign In
-              </button>
-              <button
+                {!isSignup && (
+                  <motion.span
+                    layoutId="auth-tab-active"
+                    className="absolute inset-0 rounded-xl border border-[#6366F1]/15 bg-white dark:bg-[#111726] shadow-sm shadow-[#6366F1]/10"
+                    transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                  />
+                )}
+                <span className="relative z-10">Sign In</span>
+              </motion.button>
+              <motion.button
                 type="button"
                 onClick={() => { setIsSignup(true); setLoginError(''); }}
-                className={`flex-1 pb-3 text-sm font-bold border-b-2 transition-all cursor-pointer ${
+                whileTap={{ scale: 0.98 }}
+                className={`relative min-h-[44px] flex-1 rounded-xl text-sm font-bold transition-colors cursor-pointer overflow-hidden ${
                   isSignup
-                    ? 'border-[#6366F1] text-[#6366F1] dark:text-indigo-400'
-                    : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400'
+                    ? 'text-[#6366F1] dark:text-indigo-300'
+                    : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400'
                 }`}
               >
-                Create Account
-              </button>
+                {isSignup && (
+                  <motion.span
+                    layoutId="auth-tab-active"
+                    className="absolute inset-0 rounded-xl border border-[#6366F1]/15 bg-white dark:bg-[#111726] shadow-sm shadow-[#6366F1]/10"
+                    transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                  />
+                )}
+                <span className="relative z-10">Create Account</span>
+              </motion.button>
             </div>
 
             {/* Error */}
@@ -391,19 +452,39 @@ export default function LoginPage() {
                   />
                 </div>
               )}
-              <button
+              <motion.button
                 type="submit"
                 disabled={isFormSubmitting || isGoogleLoading || isLoading}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-[#6366F1] hover:bg-[#5053E0] disabled:bg-[#94A3B8] text-white rounded-xl text-sm font-bold shadow-md shadow-[#6366F1]/15 transition-all active:scale-[0.98] cursor-pointer"
+                whileHover={isFormSubmitting || isGoogleLoading || isLoading ? undefined : { y: -1, scale: 1.01 }}
+                whileTap={isFormSubmitting || isGoogleLoading || isLoading ? undefined : { scale: 0.985 }}
+                className="group relative w-full min-h-[52px] flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-[#4F46E5] via-[#6366F1] to-[#14B8A6] disabled:from-[#94A3B8] disabled:via-[#94A3B8] disabled:to-[#94A3B8] text-white text-sm font-bold shadow-lg shadow-[#6366F1]/20 transition-all cursor-pointer disabled:cursor-not-allowed"
               >
+                <motion.span
+                  aria-hidden="true"
+                  className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/25 to-transparent"
+                  animate={{ left: ['-35%', '110%'] }}
+                  transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
+                />
+                <IntakeSignal />
                 {isFormSubmitting ? (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span className="relative z-10 flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Taking request...
+                  </span>
                 ) : isSignup ? (
-                  'Create Account'
+                  <span className="relative z-10 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4" />
+                    Create Account
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                  </span>
                 ) : (
-                  'Sign In'
+                  <span className="relative z-10 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4" />
+                    Sign In
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                  </span>
                 )}
-              </button>
+              </motion.button>
             </form>
 
             {/* Divider */}
@@ -418,33 +499,60 @@ export default function LoginPage() {
               {GOOGLE_CLIENT_ID ? (
                 <>
                   {isGoogleLoading ? (
-                    <div className="w-full h-[44px] flex items-center justify-center bg-white dark:bg-[#1E293B] border border-[#E8EAED] dark:border-slate-700 rounded-xl">
-                      <div className="w-5 h-5 border-2 border-[#6366F1] border-t-transparent rounded-full animate-spin" />
-                      <span className="ml-2.5 text-sm font-medium text-[#64748B] dark:text-slate-400">Signing in...</span>
+                    <div className="relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-[#6366F1]/45 via-[#14B8A6]/35 to-[#F59E0B]/35 p-px shadow-sm shadow-[#6366F1]/10">
+                      <div className="relative h-[56px] flex items-center justify-center rounded-[15px] bg-white/95 dark:bg-[#0B0F19]/95">
+                        <IntakeSignal />
+                        <div className="w-5 h-5 border-2 border-[#6366F1] border-t-transparent rounded-full animate-spin" />
+                        <span className="ml-2.5 text-sm font-bold text-[#64748B] dark:text-slate-400">Signing in...</span>
+                      </div>
                     </div>
                   ) : (
-                    <div className="w-full min-h-[52px] rounded-xl border border-[#E8EAED] dark:border-[#1E293B] bg-white dark:bg-[#0B0F19] shadow-sm flex items-center justify-center overflow-hidden px-2">
-                      <div
-                        ref={googleBtnRef}
-                        id="google-signin-btn"
-                        className="w-full min-h-[44px] flex items-center justify-center"
+                    <motion.div
+                      className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-[#4F46E5]/80 via-[#6366F1]/70 to-[#14B8A6]/70 p-px shadow-lg shadow-[#6366F1]/15 transition-all hover:shadow-xl hover:shadow-[#6366F1]/20"
+                      whileHover={{ y: -1, scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                    >
+                      <motion.span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/55 to-transparent"
+                        animate={{ left: ['-35%', '110%'] }}
+                        transition={{ duration: 3.6, repeat: Infinity, ease: 'easeInOut' }}
                       />
-                    </div>
+                      <div className="relative min-h-[58px] rounded-[15px] border border-white/80 dark:border-white/5 bg-white/95 dark:bg-[#0B0F19]/95 flex items-center justify-center overflow-hidden px-4 transition-colors group-hover:bg-[#F8F9FA] dark:group-hover:bg-[#111726]">
+                        <IntakeSignal />
+                        <div aria-hidden="true" className="pointer-events-none relative z-10 flex items-center justify-center gap-3 text-sm font-bold text-[#1A1A2E] dark:text-slate-100">
+                          <GoogleLogoMark />
+                          <span>Continue with Google</span>
+                          <ArrowRight className="h-4 w-4 text-[#6366F1] transition-transform group-hover:translate-x-0.5 dark:text-indigo-300" />
+                        </div>
+                        <div
+                          ref={googleBtnRef}
+                          id="google-signin-btn"
+                          className="absolute inset-0 z-20 flex items-center justify-center overflow-hidden rounded-[15px] opacity-[0.01]"
+                        />
+                      </div>
+                    </motion.div>
                   )}
                 </>
               ) : (
-                <button
-                  id="google-signin-unconfigured-btn"
-                  type="button"
-                  onClick={handleGoogleUnavailable}
-                  disabled={isGoogleLoading || isFormSubmitting}
-                  className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white dark:bg-[#0B0F19] border border-[#E8EAED] dark:border-[#1E293B] hover:border-[#6366F1]/40 hover:bg-[#F8F9FA] dark:hover:bg-slate-900 rounded-xl text-sm font-bold text-[#1A1A2E] dark:text-slate-200 transition-all cursor-pointer shadow-sm"
+                <motion.div
+                  className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-[#6366F1]/45 via-[#14B8A6]/35 to-[#F59E0B]/35 p-px shadow-sm shadow-[#6366F1]/10 transition-all hover:shadow-md hover:shadow-[#6366F1]/15"
+                  whileHover={{ y: -1, scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
                 >
-                  <span className="w-5 h-5 rounded-full bg-white border border-[#E8EAED] text-[#4285F4] flex items-center justify-center text-xs font-black">
-                    G
-                  </span>
-                  Continue with Google
-                </button>
+                  <button
+                    id="google-signin-unconfigured-btn"
+                    type="button"
+                    onClick={handleGoogleUnavailable}
+                    disabled={isGoogleLoading || isFormSubmitting}
+                    className="relative w-full min-h-[56px] flex items-center justify-center gap-3 overflow-hidden px-4 rounded-[15px] bg-white/95 dark:bg-[#0B0F19]/95 border border-white/80 dark:border-white/5 text-sm font-bold text-[#1A1A2E] dark:text-slate-200 transition-colors cursor-pointer group-hover:bg-[#F8F9FA] dark:group-hover:bg-[#111726] disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    <IntakeSignal />
+                    <GoogleLogoMark />
+                    <span className="relative z-10">Continue with Google</span>
+                    <ArrowRight className="relative z-10 h-4 w-4 text-[#6366F1] transition-transform group-hover:translate-x-0.5 dark:text-indigo-300" />
+                  </button>
+                </motion.div>
               )}
 
               {!GOOGLE_CLIENT_ID && (

@@ -7,7 +7,7 @@ if not os.getenv("VERCEL"):
     load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 PLACEHOLDER_PREFIXES = ("your_", "replace_", "change_")
-DEFAULT_GOOGLE_CLIENT_ID = "845724740843-58r6kahi10fmd3ckir7lp9qpc85brivc.apps.googleusercontent.com"
+DEFAULT_GOOGLE_CLIENT_ID = "your_google_client_id"
 
 
 def clean_env_value(value: str) -> str:
