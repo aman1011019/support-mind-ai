@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useDarkMode } from '../utils/theme';
 import { useAuth } from '../context/AuthContext';
-import { tokenStorage } from '../services/api';
+import { authApi, tokenStorage } from '../services/api';
 import ProductLogo from './ProductLogo';
 import {
   Brain, ShieldCheck, Sparkles, Sun, Moon, ArrowRight, CheckCircle2, Zap
@@ -146,14 +146,11 @@ export default function LoginPage() {
     setIsGoogleLoading(true);
     setLoginError('');
     try {
-      // Use a test credential endpoint for dev
-      const res = await fetch('/api/auth/dev-login', { method: 'POST' });
-      if (!res.ok) throw new Error('Dev login failed');
-      const data = await res.json();
+      const data = await authApi.devLogin();
       tokenStorage.set(data.access_token);
       window.location.reload();
-    } catch {
-      setLoginError('Configure GOOGLE_CLIENT_ID in .env to enable Google sign-in.');
+    } catch (err: any) {
+      setLoginError(err.message || 'Configure GOOGLE_CLIENT_ID in .env to enable Google sign-in.');
     } finally {
       setIsGoogleLoading(false);
     }

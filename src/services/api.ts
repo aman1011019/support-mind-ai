@@ -8,6 +8,10 @@ const BASE_URL = configuredApiUrl && !configuredApiUrl.includes('your_')
   ? configuredApiUrl.replace(/\/$/, '')
   : '/api';
 
+const API_TARGET = BASE_URL === '/api'
+  ? 'the backend API at http://localhost:8000'
+  : `the backend API at ${BASE_URL}`;
+
 // ─── Token Management ──────────────────────────────────────────────────────
 
 export const tokenStorage = {
@@ -15,6 +19,41 @@ export const tokenStorage = {
   set: (token: string): void => localStorage.setItem('supportmind_token', token),
   clear: (): void => localStorage.removeItem('supportmind_token'),
 };
+
+function formatDetail(detail: unknown): string | null {
+  if (!detail) return null;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) => {
+        if (typeof item === 'string') return item;
+        if (item && typeof item === 'object' && 'msg' in item) return String(item.msg);
+        return null;
+      })
+      .filter(Boolean)
+      .join(' ');
+  }
+  return null;
+}
+
+async function getApiErrorMessage(res: Response): Promise<string> {
+  const contentType = res.headers.get('content-type') || '';
+
+  if (contentType.includes('application/json')) {
+    const payload = await res.json().catch(() => null);
+    const detail = formatDetail(payload?.detail) || formatDetail(payload?.message) || formatDetail(payload?.error);
+    if (detail) return detail;
+  } else {
+    const text = (await res.text().catch(() => '')).trim();
+    if (text) return text;
+  }
+
+  if (res.status >= 500) {
+    return `Cannot reach ${API_TARGET}. Start the backend server and try again.`;
+  }
+
+  return `API request failed (${res.status} ${res.statusText || 'Error'}).`;
+}
 
 // ─── Base Fetch Wrapper ────────────────────────────────────────────────────
 
@@ -29,17 +68,21 @@ async function apiFetch<T>(
     ...options.headers,
   };
 
-  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  } catch {
+    throw new Error(`Cannot reach ${API_TARGET}. Start the backend server and try again.`);
+  }
 
-  if (res.status === 401) {
+  if (res.status === 401 && token) {
     tokenStorage.clear();
     window.location.href = '/login';
     throw new Error('Session expired. Please sign in again.');
   }
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: 'Unknown error' }));
-    throw new Error(err.detail || `API Error: ${res.status}`);
+    throw new Error(await getApiErrorMessage(res));
   }
 
   return res.json() as Promise<T>;
@@ -74,6 +117,13 @@ export const authApi = {
 
   /** Logout */
   logout: () => apiFetch('/auth/logout', { method: 'POST' }),
+
+  /** Local demo login when Google OAuth is not configured */
+  devLogin: () =>
+    apiFetch<{ access_token: string; token_type: string; user: UserProfile }>(
+      '/auth/dev-login',
+      { method: 'POST' }
+    ),
 };
 
 // ─── Analytics API ─────────────────────────────────────────────────────────
