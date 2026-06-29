@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useDarkMode } from '../utils/theme';
 import ProductLogo from './ProductLogo';
+import HindsightShowcase from './HindsightShowcase';
 import { 
   Brain, 
   Cpu, 
@@ -73,11 +74,12 @@ export default function LandingPage() {
           {/* Desktop Nav Items */}
           <div className="hidden md:flex items-center gap-8">
             <button onClick={() => handleScrollTo('features')} className="text-sm font-medium text-[#64748B] dark:text-slate-400 hover:text-[#1A1A2E] dark:hover:text-slate-100 transition-colors cursor-pointer">Features</button>
+            <button onClick={() => handleScrollTo('hindsight')} className="text-sm font-medium text-[#64748B] dark:text-slate-400 hover:text-[#1A1A2E] dark:hover:text-slate-100 transition-colors cursor-pointer">Hindsight</button>
             <button onClick={() => handleScrollTo('technology')} className="text-sm font-medium text-[#64748B] dark:text-slate-400 hover:text-[#1A1A2E] dark:hover:text-slate-100 transition-colors cursor-pointer">Technology</button>
             <button onClick={() => handleScrollTo('pricing')} className="text-sm font-medium text-[#64748B] dark:text-slate-400 hover:text-[#1A1A2E] dark:hover:text-slate-100 transition-colors cursor-pointer">Enterprise</button>
           </div>
  
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {/* Theme Toggle Button */}
             <button 
               onClick={toggleTheme}
@@ -90,16 +92,18 @@ export default function LandingPage() {
             <button 
               id="nav-login-btn"
               onClick={() => navigate('/login')} 
-              className="text-sm font-semibold text-[#64748B] dark:text-slate-400 hover:text-[#1A1A2E] dark:hover:text-slate-100 px-4 py-2 rounded-lg transition-all"
+              className="hidden sm:inline-flex text-sm font-semibold text-[#64748B] dark:text-slate-400 hover:text-[#1A1A2E] dark:hover:text-slate-100 px-4 py-2 rounded-lg transition-all"
             >
               Sign In
             </button>
             <button 
               id="nav-get-started-btn"
               onClick={handleStartTrial}
-              className="group text-sm font-semibold text-white bg-[#6366F1] hover:bg-[#5053E0] px-4 py-2.5 rounded-xl transition-all shadow-sm shadow-[#6366F1]/15 active:scale-[0.98] flex items-center gap-1.5"
+              className="group text-sm font-semibold text-white bg-[#6366F1] hover:bg-[#5053E0] px-3 sm:px-4 py-2.5 rounded-xl transition-all shadow-sm shadow-[#6366F1]/15 active:scale-[0.98] flex items-center gap-1.5"
             >
-              Get Started <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              <span className="hidden sm:inline">Get Started</span>
+              <span className="sm:hidden">Start</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
         </div>
@@ -247,7 +251,7 @@ export default function LandingPage() {
                       className="flex gap-3 items-start"
                     >
                       <div className="w-8 h-8 rounded-full bg-[#10B981] flex items-center justify-center text-xs font-bold text-white shadow-sm">
-                        ✓
+                        OK
                       </div>
                       <div className="bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 rounded-2xl p-3.5 max-w-[85%] text-xs font-medium text-[#1A1A2E] dark:text-slate-200 leading-relaxed">
                         <span className="font-bold text-[#10B981]">Status: Resolved with Hindsight Memory</span>
@@ -327,6 +331,8 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      <HindsightShowcase />
 
       {/* Technology Section */}
       <section id="technology" className="py-24 max-w-7xl mx-auto px-6">
@@ -416,7 +422,7 @@ export default function LandingPage() {
             <ProductLogo markClassName="w-7 h-7" wordmarkClassName="text-sm" />
           </div>
           <p className="text-xs font-medium text-[#94A3B8]">
-            © {new Date().getFullYear()} SupportMind Inc. Built for exceptional customer experiences. All rights reserved.
+            Copyright {new Date().getFullYear()} SupportMind Inc. Built for exceptional customer experiences. All rights reserved.
           </p>
         </div>
       </footer>
@@ -484,16 +490,16 @@ export default function LandingPage() {
 
                     <div className="bg-[#F8F9FA] rounded-xl p-4 border border-[#E8EAED] font-mono text-[11px] text-[#64748B] space-y-1.5">
                       <p className={demoStep >= 1 ? 'text-[#1A1A2E] font-medium' : 'opacity-40'}>
-                        [✔] Profile Loaded: Sarah Jenkins (Tier: Enterprise, Value: $12k/yr)
+                        [done] Profile Loaded: Sarah Jenkins (Tier: Enterprise, Value: $12k/yr)
                       </p>
                       <p className={demoStep >= 2 ? 'text-[#1A1A2E] font-medium' : 'opacity-40'}>
-                        [✔] Hindsight match: Card delay found 3 days ago. Overnight shipping upgrade matched from June 21.
+                        [done] Hindsight match: Card delay found 3 days ago. Overnight shipping upgrade matched from June 21.
                       </p>
                       <p className={demoStep >= 3 ? 'text-[#1A1A2E] font-medium' : 'opacity-40'}>
-                        [✔] CascadeFlow optimization: Directed query from baseline models to Reasoning Core.
+                        [done] CascadeFlow optimization: Directed query from baseline models to Reasoning Core.
                       </p>
                       <p className={demoStep >= 4 ? 'text-[#1A1A2E] font-medium' : 'opacity-40'}>
-                        [✔] Response synthesized. Custom resolution drafted. Urgency index computed: 92/100.
+                        [done] Response synthesized. Custom resolution drafted. Urgency index computed: 92/100.
                       </p>
                     </div>
                   </div>

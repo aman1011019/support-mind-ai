@@ -12,6 +12,7 @@ import Sidebar from './Sidebar';
 import SupportInput from './SupportInput';
 import ResponseCard from './ResponseCard';
 import MemoryManager from './MemoryManager';
+import CascadeFlowMap from './CascadeFlowMap';
 import {
   Brain, Check, Menu, X, Bot, Inbox, Info, Sun, Moon,
   TrendingUp, Clock, Smile, AlertTriangle, Users, Zap
@@ -185,6 +186,10 @@ export default function Dashboard() {
       border: 'border-rose-100 dark:border-rose-900/50',
     },
   ] : [];
+
+  const liveCascadeLevel: 1 | 2 | 3 = isProcessing
+    ? pipelineStep >= 3 ? 3 : pipelineStep >= 2 ? 2 : 1
+    : 2;
 
   return (
     <div id="dashboard-root" className="h-screen flex bg-[#F8F9FA] dark:bg-[#090D16] overflow-hidden font-sans text-[#1A1A2E] dark:text-slate-100 transition-colors duration-200">
@@ -394,6 +399,16 @@ export default function Dashboard() {
                       <p className="text-[10px] text-[#94A3B8] dark:text-slate-500 font-medium">{analytics.query_count} queries processed</p>
                     </div>
                   ) : null}
+                </div>
+
+                {/* Live routing map */}
+                <div className="bg-white dark:bg-[#111726] rounded-xl border border-[#E8EAED] dark:border-[#1E293B] shadow-sm p-5">
+                  <CascadeFlowMap
+                    compact
+                    activeLevel={liveCascadeLevel}
+                    savingsPercent={analytics?.cascade_savings_percent ?? 76}
+                    queryCount={analytics?.query_count}
+                  />
                 </div>
 
                 {/* Memory stats card */}
