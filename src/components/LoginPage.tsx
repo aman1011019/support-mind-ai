@@ -35,11 +35,14 @@ declare global {
   }
 }
 
-const DEFAULT_GOOGLE_CLIENT_ID = "your_google_client_id";
+const DEFAULT_GOOGLE_CLIENT_ID =
+  "845724740843-58r6kahi10fmd3ckir7lp9qpc85brivc.apps.googleusercontent.com";
 const rawGoogleClientId = (
   import.meta.env.VITE_GOOGLE_CLIENT_ID || DEFAULT_GOOGLE_CLIENT_ID
 ).trim();
-const GOOGLE_CLIENT_ID = rawGoogleClientId.includes("your_")
+const GOOGLE_CLIENT_ID =
+  rawGoogleClientId.includes("your_") ||
+  !rawGoogleClientId.endsWith(".apps.googleusercontent.com")
   ? DEFAULT_GOOGLE_CLIENT_ID
   : rawGoogleClientId;
 
